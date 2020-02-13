@@ -12,14 +12,11 @@ from torch.utils.data import DataLoader,Dataset
 import cv2
 
 
-def prepare_image(datadir, featherdir, data_type='train',
-                  submission=False, indices=[0, 1, 2, 3]):
+def prepare_image(data_type='train',
+                  submission=True, indices=[0, 1, 2, 3]):
     assert data_type in ['train', 'test']
     if submission:
-        image_df_list = [pd.read_parquet(datadir / f'{data_type}_image_data_{i}.parquet')
-                         for i in indices]
-    else:
-        image_df_list = [pd.read_feather(featherdir / f'{data_type}_image_data_{i}.feather')
+        image_df_list = [pd.read_parquet(f'{data_type}_image_data_{i}.parquet')
                          for i in indices]
 
     print('image_df_list', len(image_df_list))

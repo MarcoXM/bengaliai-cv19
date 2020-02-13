@@ -103,7 +103,7 @@ class Dis(nn.Module):
         self.b3 = Dblock(ch*2,ch*4,downs=True,optimized=False)
         self.b4 = Dblock(ch*4,ch*8,downs=True,optimized=False)
         self.b5 = Dblock(ch*8+1,ch*8,downs=False,optimized=False)
-        self.relu= nn.GELU()
+
         
         
         self.fc_1 = spectral_norm(nn.Linear(ch*8,n_grapheme,bias=False))
@@ -134,7 +134,7 @@ class Dis(nn.Module):
         h = self.b3(h)
         h = self.b4(h)
         h = self.b5(self.minibatch_std(h))
-        h = self.relu(h)
+        h = F.gelu(h)
         h = torch.sum(h, dim=(2,3)) # b,c 
         
         out_1 = self.fc_1(h) # b,c >>> b,1

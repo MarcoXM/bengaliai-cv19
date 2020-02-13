@@ -2,13 +2,16 @@ import pandas as pd
 import torch.optim as optim
 from models import Dis
 from data import BengaliAIDataset,get_loader
+import torch
+from data import prepare_image
+from utils import calc_advloss_D
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 ## id , its root, vowel, and consonant,
 hyper = {'Dataloader': {'batch_size': 100, # first dimension
                       'shuffle':True}, # of course
-         'Generator' : {'z_dim' : 100, # the length of z 
+         'Generator' : {'z_dim' : 100}, # the length of z 
 
          'Discriminator': {'ch': 64, #same
                           'n_grapheme': 168,
@@ -26,15 +29,12 @@ hyper = {'Dataloader': {'batch_size': 100, # first dimension
          'ema': 0.999,
          'seed': 224} # my favorite seed
 
-
-
-
+debug=False
 # data 
 train = pd.read_csv('train.csv')
 train_labels = train[['grapheme_root', 'vowel_diacritic', 'consonant_diacritic']].values
 indices = [0] if debug else [0, 1, 2, 3]
-train_images = prepare_image(
-    datadir = None, featherdir = None, data_type='train', submission=True, indices=indices)
+train_images = prepare_image(data_type='train', submission=True, indices=indices)
 trainloader = get_loader(train_images,train_labels,hyper['Dataloader'],device=device)
 
 D = Dis(**hyper['Discriminator']).to(device, torch.float32)
