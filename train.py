@@ -72,8 +72,6 @@ while True:
         if (decay_iter > 0) and (step > hyper['decay_start']):
             lr_sche_D.step()
             
-    if (decay_iter > 0) and (step > hyper['decay_start']):
-        lr_sche_G.step()
 
     #print(loss_D.item(),loss_G.item())        
     if step < hyper['num_iteration']:
@@ -86,3 +84,7 @@ while True:
         print('[%d/%d] Loss_D: %.4f'
                   % (step, hyper['num_iteration'],
                      loss.item()))
+
+    if step % 5000 == 0:
+        print('In Step {} saving model'.format(step))
+        torch.save(D.state_dict(),f'model_{step}.bin')

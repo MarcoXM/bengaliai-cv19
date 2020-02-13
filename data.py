@@ -50,6 +50,25 @@ class BengaliAIDataset(Dataset):
         return image,label
 
 
+class BengaliAITestDataset(Dataset):
+    def __init__(self, images, labels=None):
+        super(BengaliAITestDataset, self).__init__()
+        self.images = images
+        self.tranforms2tensor = A.Compose([
+            A.Resize(128,128,interpolation=cv2.INTER_AREA),
+            A.Normalize(.5,.5),
+                                          ToTensor()]
+                                         )
+
+    def __len__(self):
+        return len(self.images)
+    
+    def __getitem__(self,idx):
+        image= self.images[idx]
+        image = self.tranforms2tensor(image=image)['image']
+        return image
+
+
 def get_loader(images,labels,loader_params,device='cpu'):
     dataset = BengaliAIDataset(images,labels)
     trainloader = DataLoader(dataset,**loader_params)
@@ -64,3 +83,8 @@ def get_loader(images,labels,loader_params,device='cpu'):
                 imgs += (1.0/128.0) * torch.rand_like(imgs) # adding noise make model robust.
                 
                 yield imgs,labs
+
+def get_testloader(images,loader_params,device='cpu'):
+    dataset = BengaliAITestDataset(images)
+    trainloader = DataLoader(dataset,**loader_params)
+    return trainloader
