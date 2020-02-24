@@ -26,7 +26,7 @@ VAL_FOLDS = ast.literal_eval(os.environ.get("VAL_FOLDS"))
 
 BASE_MODEL = os.environ.get("BASE_MODEL")
 
-def loss_fn(outputs,targets):           
+def loss_fn(outputs,targets):
     o1,o2,o3 = outputs
     t1,t2,t3 = targets
     l1 = nn.CrossEntropyLoss()(o1,t1)
