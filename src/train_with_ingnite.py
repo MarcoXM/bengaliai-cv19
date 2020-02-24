@@ -17,11 +17,6 @@ from metrics import EpochMetric,macro_recall
 from utils import create_evaluator,create_trainer,LogReport,ModelSnapshotHandler
 
 
-
-
-
-
-
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 TRAINING_FOLDS_CSV = os.environ.get("TRAINING_FOLDS_CSV")
 IMG_HEIGHT = int(os.environ.get("IMG_HEIGHT"))
@@ -119,6 +114,10 @@ def main():
         ModelSnapshotHandler(model, filepath=os.path.join(OUT_DIR,"weights","{}_fold{}.pth".format(BASE_MODEL,VAL_FOLDS[0]))))
     
     trainer.run(train_loader, max_epochs=EPOCH)
+    train_history = log_report.get_dataframe()
+    train_history.to_csv(os.path.join(OUT_DIR,"{}_fold{}_log.csv".format(BASE_MODEL,VAL_FOLDS[0])), index=False)
+
+    print(train_history.head())
     
 
 

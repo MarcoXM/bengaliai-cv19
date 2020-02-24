@@ -65,7 +65,7 @@ def create_trainer(classifier, optimizer, device):
 
         loss.backward()
         optimizer.step()
-        return metrics, preds, (grapheme_root,vowel_diacritic,consonant_diacritic)
+        return metrics, torch.cat(preds,dim=1), y
     trainer = Engine(update_fn)
 
     for key in classifier.metrics_keys:
@@ -102,7 +102,7 @@ def create_evaluator(classifier, device):
                 'acc_vowel': accuracy(preds[1], vowel_diacritic),
                 'acc_consonant': accuracy(preds[2], consonant_diacritic),
             }
-            return metrics, preds, (grapheme_root,vowel_diacritic,consonant_diacritic)
+            return metrics, torch.cat(preds,dim=1), y
     evaluator = Engine(update_fn)
 
     for key in classifier.metrics_keys:
