@@ -15,6 +15,9 @@ class ResNet152(nn.Module):
         self.l1 = nn.Linear(2048,11)
         self.l2 = nn.Linear(2048,7)
         self.a = nn.AdaptiveAvgPool2d(output_size=(1, 1))
+        self.metrics_keys = [
+            'loss', 'loss_grapheme', 'loss_vowel', 'loss_consonant',
+            'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
         b = x.size(0)
@@ -39,6 +42,9 @@ class ResNet34(nn.Module):
         self.l1 = nn.Linear(512,11)
         self.l2 = nn.Linear(512,7)
         self.a = nn.AdaptiveAvgPool2d(output_size=(1, 1))
+        self.metrics_keys = [
+            'loss', 'loss_grapheme', 'loss_vowel', 'loss_consonant',
+            'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
         b = x.size(0)
@@ -63,6 +69,9 @@ class SResnet(nn.Module):
         self.l1 = nn.Linear(2048,11)
         self.l2 = nn.Linear(2048,7)
         self.a = nn.AdaptiveAvgPool2d(output_size=(1, 1))
+        self.metrics_keys = [
+            'loss', 'loss_grapheme', 'loss_vowel', 'loss_consonant',
+            'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
         b = x.size(0)
@@ -88,6 +97,9 @@ class Pnasnet(nn.Module):
         self.l1 = nn.Linear(4320,11)
         self.l2 = nn.Linear(4320,7)
         self.a = nn.AdaptiveAvgPool2d(output_size=(1, 1))
+        self.metrics_keys = [
+            'loss', 'loss_grapheme', 'loss_vowel', 'loss_consonant',
+            'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
         b = x.size(0)
@@ -113,6 +125,9 @@ class Inresnet(nn.Module):
         self.l1 = nn.Linear(1536,11)
         self.l2 = nn.Linear(1536,7)
         self.a = nn.AdaptiveAvgPool2d(output_size=(1, 1))
+        self.metrics_keys = [
+            'loss', 'loss_grapheme', 'loss_vowel', 'loss_consonant',
+            'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
         b = x.size(0)

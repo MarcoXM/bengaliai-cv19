@@ -12,9 +12,7 @@ class BengaliDatasetTrain:
 
         df = df[df.kfold.isin(folds)].reset_index(drop=True)
         self.image_ids = df.image_id.values
-        self.grapheme_root = df.grapheme_root.values
-        self.vowel_diacritic = df.vowel_diacritic.values
-        self.consonant_diacritic = df.consonant_diacritic.values
+        self.labels = df[["grapheme_root", "vowel_diacritic", "consonant_diacritic"]].values
         self.image_data = pd.concat([pd.read_parquet(f"../input/train_image_data_{i}.parquet") for i in range(4)])
 
         if len(folds) ==1 :
@@ -41,11 +39,6 @@ class BengaliDatasetTrain:
         image = Image.fromarray(image).convert('RGB')
         image = self.aug(image=np.array(image))["image"]
         image = np.transpose(image,(2,0,1)).astype(np.float32)
-
-        return {
-            "image": torch.tensor(image,dtype = torch.float32),
-            "grapheme_root": torch.tensor(self.grapheme_root[idx],dtype=torch.long),
-            "vowel_diacritic": torch.tensor(self.vowel_diacritic[idx],dtype=torch.long),
-            "consonant_diacritic": torch.tensor(self.consonant_diacritic[idx],dtype=torch.long)
-        }
+        labels = self.labels[idx]
+        return image,labels
 
