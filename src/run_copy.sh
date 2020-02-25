@@ -1,8 +1,7 @@
 #!/bin/bash
-#SBATCH -J test-job           
-#SBATCH --cpus-per-task=4          
-#SBATCH --gres=gpu:1          
-#SBATCH -t 1-00:00:00
+#SBATCH -J Kfold5          
+#SBATCH --cpus-per-task=8         
+#SBATCH --gres=gpu:1  
 
 #SBATCH --mail-user=xwang423@fordham.edu
 #SBATCH --mail-type=ALL
@@ -19,9 +18,12 @@ source venv/bin/activate
 
 export IMG_HEIGHT=137
 export IMG_WIDTH=236
+export WEIGHT_ONE=5
+export WEIGHT_TWO=3
+export WEIGHT_THR=2
 
 export EPOCH=50
-export TRAINING_BATCH_SIZE=256
+export TRAINING_BATCH_SIZE=128
 export TEST_BATCH_SIZE=8
 
 export MODEL_MEAN="(.485,.456,.406)"
@@ -32,20 +34,20 @@ export TRAINING_FOLDS_CSV="../input/train_fols.csv"
 
 export TRAINING_FOLDS="0,1,2,3"
 export VAL_FOLDS="(4,)"
-python3.6 train_with_ignite.py
+python3.6 train_with_ingnite.py
 
-# export TRAINING_FOLDS="0,1,2,4"
-# export VAL_FOLDS="(3,)"
-# python3.6 train.py
+export TRAINING_FOLDS="0,1,2,4"
+export VAL_FOLDS="(3,)"
+python3.6 train_with_ingnite.py
 
-# export TRAINING_FOLDS="0,1,3,4"
-# export VAL_FOLDS="(2,)"
-# python3.6 train.py
+export TRAINING_FOLDS="0,1,3,4"
+export VAL_FOLDS="(2,)"
+python3.6 train_with_ingnite.py
 
-# export TRAINING_FOLDS="0,2,3,4"
-# export VAL_FOLDS="(1,)"
-# python3.6 train.py
+export TRAINING_FOLDS="0,2,3,4"
+export VAL_FOLDS="(1,)"
+python3.6 train_with_ingnite.py
 
-# export TRAINING_FOLDS="1,2,3,4"
-# export VAL_FOLDS="(0,)"
-# python3.6 train.py
+export TRAINING_FOLDS="1,2,3,4"
+export VAL_FOLDS="(0,)"
+python3.6 train_with_ingnite.py

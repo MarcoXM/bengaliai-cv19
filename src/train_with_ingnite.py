@@ -14,13 +14,19 @@ from ignite.engine import Events
 from numpy.random.mtrand import RandomState
 from torch.utils.data.dataloader import DataLoader
 from metrics import EpochMetric,macro_recall
-from utils import create_evaluator,create_trainer,LogReport,ModelSnapshotHandler
+from utils import create_evaluator,create_trainer,LogReport,ModelSnapshotHandler,output_transform
 
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 TRAINING_FOLDS_CSV = os.environ.get("TRAINING_FOLDS_CSV")
 IMG_HEIGHT = int(os.environ.get("IMG_HEIGHT"))
 IMG_WIDTH = int(os.environ.get("IMG_WIDTH"))
+
+
+
+WEIGHT_ONE=float(os.environ.get("WEIGHT_ONE"))
+WEIGHT_TWO=float(os.environ.get("WEIGHT_TWO"))
+WEIGHT_THR=float(os.environ.get("WEIGHT_THR"))
 
 EPOCH = int(os.environ.get("EPOCH"))
 TRAINING_BATCH_SIZE = int(os.environ.get("TRAINING_BATCH_SIZE"))
@@ -52,7 +58,7 @@ def main():
     train_loader = torch.utils.data.DataLoader(
         dataset = train_dataset,
         batch_size=TRAINING_BATCH_SIZE,
-        shuffle=True,
+        shuffle=True,pin_memory=True,
         num_workers=4,
     )
     valid_dataset = BengaliDatasetTrain(
@@ -66,27 +72,36 @@ def main():
         dataset = valid_dataset,
         batch_size=TEST_BATCH_SIZE,
         shuffle=False,
-        num_workers=4,
+        num_workers=4,pin_memory=True
     )
 
     optimizer = optim.Adam(model.parameters(),lr = 1e-3)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode='min', factor=0.7, patience=5, min_lr=1e-10)
 
-    trainer = create_trainer(model, optimizer, DEVICE)
-    def output_transform(output):
-        metric, pred_y, y = output
-        return pred_y.cpu(), y.cpu()
 
+
+    ## Define Trainer
+    trainer = create_trainer(model, optimizer, DEVICE,WEIGHT_ONE,WEIGHT_TWO,WEIGHT_THR)
+
+    # Recall for Training
+    EpochMetric(
+        compute_fn=macro_recall,
+        output_transform=output_transform
+    ).attach(trainer, 'recall')
     
     pbar = ProgressBar()
     pbar.attach(trainer, metric_names='all')
 
     evaluator = create_evaluator(model, DEVICE)
+
+    #Recall for evaluating 
     EpochMetric(
         compute_fn=macro_recall,
         output_transform=output_transform
     ).attach(evaluator, 'recall')
+
+
     def run_evaluator(engine):
         evaluator.run(valid_loader)
 
@@ -99,25 +114,27 @@ def main():
         lr = scheduler.optimizer.param_groups[0]['lr']
         scheduler.step(avg_mae)
         log_report.report('lr', lr)
-        EpochMetric(
-        compute_fn=macro_recall,
-        output_transform=output_transform
-        ).attach(trainer, 'recall')
+
 
         
     trainer.add_event_handler(Events.EPOCH_COMPLETED, run_evaluator)
     trainer.add_event_handler(Events.EPOCH_COMPLETED, schedule_lr)
+
     log_report = LogReport(evaluator, os.path.join(OUT_DIR,"log"))
+
     trainer.add_event_handler(Events.EPOCH_COMPLETED, log_report)
     trainer.add_event_handler(
         Events.EPOCH_COMPLETED,
         ModelSnapshotHandler(model, filepath=os.path.join(OUT_DIR,"weights","{}_fold{}.pth".format(BASE_MODEL,VAL_FOLDS[0]))))
     
     trainer.run(train_loader, max_epochs=EPOCH)
+
+
     train_history = log_report.get_dataframe()
-    train_history.to_csv(os.path.join(OUT_DIR,"{}_fold{}_log.csv".format(BASE_MODEL,VAL_FOLDS[0])), index=False)
+    train_history.to_csv(os.path.join(OUT_DIR,"log","{}_fold{}_log.csv".format(BASE_MODEL,VAL_FOLDS[0])), index=False)
 
     print(train_history.head())
+    print("Trainning Done !!!")
     
 
 

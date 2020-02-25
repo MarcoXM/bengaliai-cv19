@@ -5,6 +5,7 @@ import numpy as np
 from ignite.metrics.metric import Metric
 
 
+
 class EpochMetric(Metric):
     """Class for metrics that should be computed on the entire output history of a model.
     Model's output and targets are restricted to be of shape `(batch_size, n_classes)`. Output
@@ -60,19 +61,20 @@ class EpochMetric(Metric):
 
 
 def macro_recall(pred_y, y, n_grapheme=168, n_vowel=11, n_consonant=7):
+    # print('Before',pred_y.size(),pred_y,type(pred_y))
+    # print('Before',y.size(),y,type(y))
     pred_y = torch.split(pred_y, [n_grapheme, n_vowel, n_consonant], dim=1)
     pred_labels = [torch.argmax(py, dim=1).cpu().numpy() for py in pred_y]
-
+    # print('After',pred_labels,pred_labels,type(pred_labels))
     y = y.cpu().numpy()
     # pred_y = [p.cpu().numpy() for p in pred_y]
-
+    # print('PRED Y AND TRUE Y'pred_labels.shape, y.shape)
     recall_grapheme = sklearn.metrics.recall_score(pred_labels[0], y[:, 0], average='macro')
     recall_vowel = sklearn.metrics.recall_score(pred_labels[1], y[:, 1], average='macro')
     recall_consonant = sklearn.metrics.recall_score(pred_labels[2], y[:, 2], average='macro')
     scores = [recall_grapheme, recall_vowel, recall_consonant]
     final_score = np.average(scores, weights=[2, 1, 1])
-    # print(f'recall: grapheme {recall_grapheme}, vowel {recall_vowel}, consonant {recall_consonant}, '
-    #       f'total {final_score}, y {y.shape}')
+    # print(f'recall: grapheme {recall_grapheme}, vowel {recall_vowel}, consonant {recall_consonant}, ',f'total {final_score},pred_label {pred_labels[0].shape} y {y.shape}')
     return final_score
 
 

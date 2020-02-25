@@ -9,6 +9,12 @@ from ignite.metrics import Average
 import torch.nn.functional as F
 
 
+def output_transform(output):
+    _, pred_y, y = output
+    # print("pred:!!!!!!!!!! ", pred_y.size(),"\n","y !!!!!!!!!!!!!!!!!!!!!!:",y.size())
+    return pred_y.cpu(), y.cpu()
+
+
 def accuracy(y, t):
     pred_label = torch.argmax(y, dim=1)
     count = pred_label.shape[0]
@@ -32,41 +38,44 @@ class DictOutputTransform:
         return x[self.key]
 
 
-def create_trainer(classifier, optimizer, device):
+def create_trainer(classifier, optimizer, device,w1,w2,w3):
     classifier.to(device)
 
     def update_fn(engine, batch):
+#         print(engine,batch)
         classifier.train()
         optimizer.zero_grad()
         # batch = [elem.to(device) for elem in batch]
-        x,y = [elem.to(device) for elem in batch]
-
+        x, y = [elem.to(device) for elem in batch]
         x = x.to(device,dtype = torch.float)
-        grapheme_root = y[:,0].to(device,dtype = torch.long)
-        vowel_diacritic = y[:,1].to(device,dtype = torch.long)
-        consonant_diacritic = y[:,2].to(device,dtype =torch.long)
+        y = y.to(device,dtype = torch.long)
 
         preds = classifier(x)
-        loss_grapheme = F.cross_entropy(preds[0], grapheme_root)
-        loss_vowel = F.cross_entropy(preds[1], vowel_diacritic)
-        loss_consonant = F.cross_entropy(preds[2], consonant_diacritic)
-        loss = loss_grapheme + loss_vowel + loss_consonant
+        loss_grapheme = F.cross_entropy(preds[0], y[:,0])
+        loss_vowel = F.cross_entropy(preds[1], y[:,1])
+        loss_consonant = F.cross_entropy(preds[2], y[:,2])
+        loss = (loss_grapheme*w1 + loss_vowel*w2 + loss_consonant*w3)/(w1+w2+w3)
 
         metrics = {
-            'loss': loss.item(),
-            'loss_grapheme': loss_grapheme.item(),
-            'loss_vowel': loss_vowel.item(),
-            'loss_consonant': loss_consonant.item(),
-            'acc_grapheme': accuracy(preds[0], grapheme_root),
-            'acc_vowel': accuracy(preds[1], vowel_diacritic),
-            'acc_consonant': accuracy(preds[2], consonant_diacritic),
+                'loss': loss.item(),
+                'loss_grapheme': loss_grapheme.item(),
+                'loss_vowel': loss_vowel.item(),
+                'loss_consonant': loss_consonant.item(),
+                'acc_grapheme': accuracy(preds[0], y[:,0]),
+                'acc_vowel': accuracy(preds[1], y[:,1]),
+                'acc_consonant': accuracy(preds[2], y[:,2]),
         }
-
 
         loss.backward()
         optimizer.step()
         return metrics, torch.cat(preds,dim=1), y
     trainer = Engine(update_fn)
+        
+#         loss, metrics, pred_y = classifier(x, y)
+#         loss.backward()
+#         optimizer.step()
+#         return metrics, pred_y, y
+#     trainer = Engine(update_fn)
 
     for key in classifier.metrics_keys:
         Average(output_transform=DictOutputTransform(key)).attach(trainer, key)
@@ -78,19 +87,17 @@ def create_evaluator(classifier, device):
 
     def update_fn(engine, batch):
         classifier.eval()
+
         with torch.no_grad():
             # batch = [elem.to(device) for elem in batch]
-            x,y = [elem.to(device) for elem in batch]
-
+            x, y = [elem.to(device) for elem in batch]
             x = x.to(device,dtype = torch.float)
-            grapheme_root = y[:,0].to(device,dtype = torch.long)
-            vowel_diacritic = y[:,1].to(device,dtype = torch.long)
-            consonant_diacritic = y[:,2].to(device,dtype =torch.long)
+            y = y.to(device,dtype = torch.long)
 
             preds = classifier(x)
-            loss_grapheme = F.cross_entropy(preds[0], grapheme_root)
-            loss_vowel = F.cross_entropy(preds[1], vowel_diacritic)
-            loss_consonant = F.cross_entropy(preds[2], consonant_diacritic)
+            loss_grapheme = F.cross_entropy(preds[0], y[:,0])
+            loss_vowel = F.cross_entropy(preds[1], y[:,1])
+            loss_consonant = F.cross_entropy(preds[2], y[:,2])
             loss = loss_grapheme + loss_vowel + loss_consonant
 
             metrics = {
@@ -98,12 +105,15 @@ def create_evaluator(classifier, device):
                 'loss_grapheme': loss_grapheme.item(),
                 'loss_vowel': loss_vowel.item(),
                 'loss_consonant': loss_consonant.item(),
-                'acc_grapheme': accuracy(preds[0], grapheme_root),
-                'acc_vowel': accuracy(preds[1], vowel_diacritic),
-                'acc_consonant': accuracy(preds[2], consonant_diacritic),
+                'acc_grapheme': accuracy(preds[0], y[:,0]),
+                'acc_vowel': accuracy(preds[1], y[:,1]),
+                'acc_consonant': accuracy(preds[2], y[:,2]),
             }
             return metrics, torch.cat(preds,dim=1), y
-    evaluator = Engine(update_fn)
+    evaluator = Engine(update_fn)  
+#             _, metrics, pred_y = classifier(x, y)
+#             return metrics, pred_y, y
+    # evaluator = Engine(update_fn)
 
     for key in classifier.metrics_keys:
         Average(output_transform=DictOutputTransform(key)).attach(evaluator, key)
@@ -127,8 +137,8 @@ class LogReport:
         elapsed_time = perf_counter() - self.start_time
         elem = {'epoch': engine.state.epoch,
                 'iteration': engine.state.iteration}
-        elem.update({f'train/{key}': value
-                     for key, value in engine.state.metrics.items()})
+        # print(engine.state.metrics.items())
+        elem.update({f'train/{key}': value for key, value in engine.state.metrics.items()})
         if self.evaluator is not None:
             elem.update({f'valid/{key}': value
                          for key, value in self.evaluator.state.metrics.items()})
@@ -142,6 +152,7 @@ class LogReport:
         # --- print ---
         msg = ''
         for key, value in elem.items():
+            # print("pair",key,value)
             if key in ['iteration']:
                 # skip printing some parameters...
                 continue

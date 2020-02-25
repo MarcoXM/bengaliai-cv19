@@ -6,7 +6,8 @@ MODEL_DISPATCHER = {
     "resnet34":models.ResNet34,
     'se_net':models.SResnet,
     'pnasnet':models.Pnasnet,
-    'inresnet':models.Inresnet
+    'inresnet':models.Inresnet,
+    'polynet':models.PolyNet
 
 }
 
