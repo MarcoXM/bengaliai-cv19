@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH -J Kfold5          
+#SBATCH -J InRes5          
 #SBATCH --cpus-per-task=8         
 #SBATCH --gres=gpu:1  
 
 #SBATCH --mail-user=xwang423@fordham.edu
 #SBATCH --mail-type=ALL
-#SBATCH --output=stdout
-#SBATCH --error=stderr
+#SBATCH --output=stdout_InRest
+#SBATCH --error=stderr_InRest
 #SBATCH --exclude=node[001,002]
 #SBATCH --nodes=1
 
@@ -16,20 +16,21 @@ module load ml-pythondeps-py36-cuda10.1-gcc/3.0.0
 module load pytorch-py36-cuda10.1-gcc/1.3.1
 source venv/bin/activate
 
+export WEIGHT_ONE=7
+export WEIGHT_TWO=2
+export WEIGHT_THR=1
+export BASE_MODEL="inresnet"
+export EPOCH=50
+
+export TRAINING_BATCH_SIZE=64
+export TEST_BATCH_SIZE=8
+
 export IMG_HEIGHT=137
 export IMG_WIDTH=236
-export WEIGHT_ONE=5
-export WEIGHT_TWO=3
-export WEIGHT_THR=2
-
-export EPOCH=50
-export TRAINING_BATCH_SIZE=128
-export TEST_BATCH_SIZE=8
 
 export MODEL_MEAN="(.485,.456,.406)"
 export MODEL_STD="(.229,.224,.225)"
 
-export BASE_MODEL="resnet34"
 export TRAINING_FOLDS_CSV="../input/train_fols.csv"
 
 export TRAINING_FOLDS="0,1,2,3"

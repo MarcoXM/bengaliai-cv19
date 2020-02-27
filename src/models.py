@@ -89,9 +89,9 @@ class Pnasnet(nn.Module):
     def __init__(self,pretrain = True):
         super(Pnasnet,self).__init__()
         if pretrain:
-            self.model = pretrainedmodels.__dict__["pnasnet5large"](pretrained = 'imagenet')
+            self.model = pretrainedmodels.__dict__["pnasnet5large"](num_classes=1000,pretrained = 'imagenet')
         else:
-            self.model = pretrainedmodels.__dict__["pnasnet5large"](pretrained = None)
+            self.model = pretrainedmodels.__dict__["pnasnet5large"](num_classes=1000,pretrained = None)
 
         self.l0 = nn.Linear(4320,168)
         self.l1 = nn.Linear(4320,11)

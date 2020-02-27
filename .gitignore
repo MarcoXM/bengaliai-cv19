@@ -1,3 +1,5 @@
 .vscode/
 input/
 notebook/
+*.sh
+log/
