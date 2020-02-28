@@ -8,12 +8,14 @@ import torch.nn as nn
 from model_dispather import MODEL_DISPATCHER
 import argparse
 from distutils.util import strtobool
+from datetime import datetime
 import os
 from ignite.contrib.handlers import ProgressBar
 from ignite.engine import Events
 from numpy.random.mtrand import RandomState
 from torch.utils.data.dataloader import DataLoader
 from metrics import EpochMetric,macro_recall
+from ignite.handlers import ModelCheckpoint, global_step_from_engine, EarlyStopping, TerminateOnNan
 from utils import create_evaluator,create_trainer,LogReport,ModelSnapshotHandler,output_transform
 
 
@@ -48,6 +50,21 @@ def main():
     model = MODEL_DISPATCHER[BASE_MODEL](pretrain=True)
     model.to(DEVICE)
     print("Model loaded !!! ") 
+
+    exp_name = datetime.now().strftime("%Y%m%d-%H%M%S")
+    os.mkdir(os.path.join("../",BASE_MODEL))
+    OUT_DIR = os.path.join("../",BASE_MODEL,exp_name)
+    print("This Exp would be save in ",OUT_DIR)
+    if not os.path.exists(OUT_DIR):
+        os.mkdir(OUT_DIR)
+
+    if not os.path.exists(os.path.join(OUT_DIR,"weights")):
+        os.mkdir(os.path.join(OUT_DIR,"weights"))
+
+    if not os.path.exists(os.path.join(OUT_DIR,"log")):
+        os.mkdir(os.path.join(OUT_DIR,"log"))
+
+
     train_dataset = BengaliDatasetTrain(
         folds=TRAINING_FOLDS,
         img_height = IMG_HEIGHT,
@@ -105,6 +122,7 @@ def main():
     def run_evaluator(engine):
         evaluator.run(valid_loader)
 
+
     def schedule_lr(engine):
         # metrics = evaluator.state.metrics
         metrics = engine.state.metrics
@@ -115,11 +133,26 @@ def main():
         scheduler.step(avg_mae)
         log_report.report('lr', lr)
 
+    def score_fn(engine):
+        score = engine.state.metrics['loss']
+        return score
+    es_handler = EarlyStopping(patience=10, score_function=score_fn, trainer=trainer)
+    evaluator.add_event_handler(Events.COMPLETED, es_handler)
+    def default_score_fn(engine):
+        score = engine.state.metrics['recall']
+        return score
 
+    best_model_handler = ModelCheckpoint(dirname=os.path.join(OUT_DIR,"weights"),
+                                        filename_prefix=f"best_{BASE_MODEL}_fold{VAL_FOLDS[0]}",
+                                        n_saved=3,
+                                        global_step_transform=global_step_from_engine(trainer),
+                                        score_name="macro_recall",
+                                        score_function=default_score_fn)
+    evaluator.add_event_handler(Events.COMPLETED, best_model_handler, {"model": model, })
         
     trainer.add_event_handler(Events.EPOCH_COMPLETED, run_evaluator)
     trainer.add_event_handler(Events.EPOCH_COMPLETED, schedule_lr)
-
+    
     log_report = LogReport(evaluator, os.path.join(OUT_DIR,"log"))
 
     trainer.add_event_handler(Events.EPOCH_COMPLETED, log_report)
