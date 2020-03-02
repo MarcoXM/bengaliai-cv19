@@ -37,8 +37,8 @@ def get_optimizer(model, momentum, weight_decay, nesterov):
     biases = [p for n, p in model.named_parameters() if "bias" in n]
     others = [p for n, p in model.named_parameters() if "bias" not in n]
     return optim.SGD(
-        [{"params": others, "lr": 1.0, "weight_decay": weight_decay}, 
-         {"params": biases, "lr": 1.0, "weight_decay": weight_decay / 64}], 
+        [{"params": others, "lr": .001, "weight_decay": weight_decay}, 
+         {"params": biases, "lr": .001, "weight_decay": weight_decay / 64}], 
         momentum=momentum, nesterov=nesterov
     )
 

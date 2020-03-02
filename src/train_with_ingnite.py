@@ -48,8 +48,8 @@ parameters={
         "momentum": 0.9,
         "weight_decay": 5e-4,
         "nesterov": True,
-        "lr_max_value": 1.0,
-        "lr_max_value_epoch": EPOCH // 16,
+        "lr_max_value": 0.1,
+        "lr_max_value_epoch": EPOCH // 10,
     }
 
 
@@ -147,7 +147,7 @@ def main():
     def score_fn(engine):
         score = engine.state.metrics['loss']
         return score
-    es_handler = EarlyStopping(patience=10, score_function=score_fn, trainer=trainer)
+    es_handler = EarlyStopping(patience=30, score_function=score_fn, trainer=trainer)
     evaluator.add_event_handler(Events.COMPLETED, es_handler)
     def default_score_fn(engine):
         score = engine.state.metrics['recall']
@@ -164,7 +164,7 @@ def main():
     trainer.add_event_handler(Events.EPOCH_COMPLETED, run_evaluator)
     trainer.add_event_handler(Events.EPOCH_COMPLETED, get_curr_lr)
     
-    log_report = LogReport(evaluator, os.path.join(OUT_DIR,"log"))
+    log_report = LogReport(evaluator, os.path.join(OUT_DIR,"weights","{}_fold{}log".format(BASE_MODEL,VAL_FOLDS[0])))
 
     trainer.add_event_handler(Events.EPOCH_COMPLETED, log_report)
     trainer.add_event_handler(

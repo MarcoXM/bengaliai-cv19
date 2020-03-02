@@ -2,6 +2,12 @@ import pretrainedmodels
 import torch.nn as nn 
 import torch.functional as F
 
+class Swish(nn.Module):
+    
+    def forward(self, x):
+        return x * torch.sigmoid(x)
+
+
 
 class ResNet152(nn.Module):
     def __init__(self,pretrain = True):
