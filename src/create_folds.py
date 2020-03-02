@@ -4,7 +4,7 @@ from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 if __name__ == '__main__':
     df = pd.read_csv("../input/train.csv")
     print(df.head())
-    df.loc[:,"kfolf"] = -1
+    df.loc[:,"kfold"] = -1
     df = df.sample(frac = 1).reset_index(drop = True)
     X = df.image_id.values
     y = df[["grapheme_root", "vowel_diacritic", "consonant_diacritic"]].values

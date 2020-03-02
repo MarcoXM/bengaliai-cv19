@@ -16,7 +16,7 @@ from numpy.random.mtrand import RandomState
 from torch.utils.data.dataloader import DataLoader
 from metrics import EpochMetric,macro_recall
 from ignite.handlers import ModelCheckpoint, global_step_from_engine, EarlyStopping, TerminateOnNan
-from utils import create_evaluator,create_trainer,LogReport,ModelSnapshotHandler,output_transform
+from utils import create_evaluator,create_trainer,LogReport,ModelSnapshotHandler,output_transform,get_lr_scheduler,get_optimizer
 
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -43,6 +43,14 @@ VAL_FOLDS = ast.literal_eval(os.environ.get("VAL_FOLDS"))
 BASE_MODEL = os.environ.get("BASE_MODEL")
 OUT_DIR = "../"
 
+parameters={
+        "alpha": 0.2,
+        "momentum": 0.9,
+        "weight_decay": 5e-4,
+        "nesterov": True,
+        "lr_max_value": 1.0,
+        "lr_max_value_epoch": EPOCH // 16,
+    }
 
 
 def main():
@@ -52,17 +60,16 @@ def main():
     print("Model loaded !!! ") 
 
     exp_name = datetime.now().strftime("%Y%m%d-%H%M%S")
-    os.mkdir(os.path.join("../",BASE_MODEL))
+    if not os.path.exists(os.path.join("../",BASE_MODEL)):
+        os.mkdir(os.path.join("../",BASE_MODEL))
     OUT_DIR = os.path.join("../",BASE_MODEL,exp_name)
     print("This Exp would be save in ",OUT_DIR)
-    if not os.path.exists(OUT_DIR):
-        os.mkdir(OUT_DIR)
 
-    if not os.path.exists(os.path.join(OUT_DIR,"weights")):
-        os.mkdir(os.path.join(OUT_DIR,"weights"))
+    os.mkdir(OUT_DIR)
 
-    if not os.path.exists(os.path.join(OUT_DIR,"log")):
-        os.mkdir(os.path.join(OUT_DIR,"log"))
+    os.mkdir(os.path.join(OUT_DIR,"weights"))
+
+    os.mkdir(os.path.join(OUT_DIR,"log"))
 
 
     train_dataset = BengaliDatasetTrain(
@@ -92,10 +99,20 @@ def main():
         num_workers=4,pin_memory=True
     )
 
-    optimizer = optim.Adam(model.parameters(),lr = 1e-3)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.7, patience=5, min_lr=1e-10)
 
+    optimizer = get_optimizer(
+        model, 
+        parameters.get("momentum"), 
+        parameters.get("weight_decay"),
+        parameters.get("nesterov")
+    )
+    lr_scheduler = get_lr_scheduler(
+        optimizer, 
+        parameters.get("lr_max_value"),
+        parameters.get("lr_max_value_epoch"),        
+        num_epochs=EPOCH,
+        epoch_length=len(train_loader)
+    )
 
 
     ## Define Trainer
@@ -123,14 +140,8 @@ def main():
         evaluator.run(valid_loader)
 
 
-    def schedule_lr(engine):
-        # metrics = evaluator.state.metrics
-        metrics = engine.state.metrics
-        avg_mae = metrics['loss']
-
-        # --- update lr ---
-        lr = scheduler.optimizer.param_groups[0]['lr']
-        scheduler.step(avg_mae)
+    def get_curr_lr(engine):
+        lr = lr_scheduler.schedulers[0].optimizer.param_groups[0]['lr']
         log_report.report('lr', lr)
 
     def score_fn(engine):
@@ -141,7 +152,7 @@ def main():
     def default_score_fn(engine):
         score = engine.state.metrics['recall']
         return score
-
+    trainer.add_event_handler(Events.ITERATION_STARTED, lr_scheduler)
     best_model_handler = ModelCheckpoint(dirname=os.path.join(OUT_DIR,"weights"),
                                         filename_prefix=f"best_{BASE_MODEL}_fold{VAL_FOLDS[0]}",
                                         n_saved=3,
@@ -151,7 +162,7 @@ def main():
     evaluator.add_event_handler(Events.COMPLETED, best_model_handler, {"model": model, })
         
     trainer.add_event_handler(Events.EPOCH_COMPLETED, run_evaluator)
-    trainer.add_event_handler(Events.EPOCH_COMPLETED, schedule_lr)
+    trainer.add_event_handler(Events.EPOCH_COMPLETED, get_curr_lr)
     
     log_report = LogReport(evaluator, os.path.join(OUT_DIR,"log"))
 
