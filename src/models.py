@@ -102,7 +102,7 @@ class ResNet101(nn.Module):
         self.swish = Swish()
         
         self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
-        self.fc2 = spectral_norm(nn.Linear(256, 12, bias=False))
+        self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
         nn.init.orthogonal_(self.fc1.weight.data)
@@ -144,7 +144,7 @@ class ResNet34(nn.Module):
         self.swish = Swish()
         
         self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
-        self.fc2 = spectral_norm(nn.Linear(256, 12, bias=False))
+        self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
         nn.init.orthogonal_(self.fc1.weight.data)
@@ -186,7 +186,7 @@ class SResnet(nn.Module):
         self.swish = Swish()
         
         self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
-        self.fc2 = spectral_norm(nn.Linear(256, 12, bias=False))
+        self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
         nn.init.orthogonal_(self.fc1.weight.data)
@@ -229,7 +229,7 @@ class Pnasnet(nn.Module):
         self.swish = Swish()
         
         self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
-        self.fc2 = spectral_norm(nn.Linear(256, 12, bias=False))
+        self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
         nn.init.orthogonal_(self.fc1.weight.data)
@@ -272,7 +272,7 @@ class Inresnet(nn.Module): # 改好打开
         self.swish = Swish()
         
         self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
-        self.fc2 = spectral_norm(nn.Linear(256, 12, bias=False))
+        self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
         nn.init.orthogonal_(self.fc1.weight.data)
@@ -315,7 +315,7 @@ class PolyNet(nn.Module):
         self.swish = Swish()
         
         self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
-        self.fc2 = spectral_norm(nn.Linear(256, 12, bias=False))
+        self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
         nn.init.orthogonal_(self.fc1.weight.data)
@@ -358,7 +358,7 @@ class SeNet(nn.Module):
         self.swish = Swish()
         
         self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
-        self.fc2 = spectral_norm(nn.Linear(256, 12, bias=False))
+        self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
         nn.init.orthogonal_(self.fc1.weight.data)
@@ -402,7 +402,7 @@ class IcNetv4(nn.Module):
         self.swish = Swish()
         
         self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
-        self.fc2 = spectral_norm(nn.Linear(256, 12, bias=False))
+        self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
         nn.init.orthogonal_(self.fc1.weight.data)

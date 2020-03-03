@@ -48,7 +48,7 @@ parameters={
         "momentum": 0.9,
         "weight_decay": 5e-4,
         "nesterov": True,
-        "lr_max_value": 0.1,
+        "lr_max_value": 0.04,
         "lr_max_value_epoch": EPOCH // 10,
     }
 
@@ -164,7 +164,7 @@ def main():
     trainer.add_event_handler(Events.EPOCH_COMPLETED, run_evaluator)
     trainer.add_event_handler(Events.EPOCH_COMPLETED, get_curr_lr)
     
-    log_report = LogReport(evaluator, os.path.join(OUT_DIR,"weights","{}_fold{}log".format(BASE_MODEL,VAL_FOLDS[0])))
+    log_report = LogReport(evaluator, os.path.join(OUT_DIR,"log"))
 
     trainer.add_event_handler(Events.EPOCH_COMPLETED, log_report)
     trainer.add_event_handler(

@@ -13,16 +13,16 @@ from ignite.contrib.handlers import PiecewiseLinear, ParamGroupScheduler
 
 def get_lr_scheduler(optimizer, lr_max_value, lr_max_value_epoch, num_epochs, epoch_length):
     milestones_values = [
-        (0, 0.0), 
+        (0, 0.00001), 
         (epoch_length * lr_max_value_epoch, lr_max_value), 
-        (epoch_length * num_epochs - 1, 0.0)
+        (epoch_length * num_epochs - 1, 0.00001)
     ]
     lr_scheduler1 = PiecewiseLinear(optimizer, "lr", milestones_values=milestones_values,param_group_index=0)
 
     milestones_values = [
-        (0, 0.0), 
-        (epoch_length * lr_max_value_epoch, lr_max_value * 64), 
-        (epoch_length * num_epochs - 1, 0.0)
+        (0, 0.00002), 
+        (epoch_length * lr_max_value_epoch, lr_max_value * 2), 
+        (epoch_length * num_epochs - 1, 0.00002)
     ]
     lr_scheduler2 = PiecewiseLinear(optimizer, "lr", milestones_values=milestones_values,param_group_index=1)
 
@@ -38,7 +38,7 @@ def get_optimizer(model, momentum, weight_decay, nesterov):
     others = [p for n, p in model.named_parameters() if "bias" not in n]
     return optim.SGD(
         [{"params": others, "lr": .001, "weight_decay": weight_decay}, 
-         {"params": biases, "lr": .001, "weight_decay": weight_decay / 64}], 
+         {"params": biases, "lr": .001, "weight_decay": weight_decay / 2}], 
         momentum=momentum, nesterov=nesterov
     )
 

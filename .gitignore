@@ -3,3 +3,4 @@ input/
 notebook/
 *.sh
 log/
+src/weights/
