@@ -143,7 +143,7 @@ class ResNet34(nn.Module):
         
         self.swish = Swish()
         
-        self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
+        self.fc1 = spectral_norm(nn.Linear(512, 168, bias=False))
         self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
@@ -157,13 +157,13 @@ class ResNet34(nn.Module):
     def forward(self,x):
         b = x.size(0)
         x = self.model.features(x)
-        x = self.attn(x)
+        x1 = self.attn(x)
 #         x = self.block2(x)
 #         x = self.block3(x)
-        x = self.block4(x)
+        x = self.block4(x1)
         x = self.swish(x)
         x = torch.sum(x, dim=(2,3))
-        l0 = self.fc1(x)
+        l0 = self.fc1(torch.sum(self.swish(x1),dim=(2,3)))
         l1 = self.fc2(x)
         l2 = self.fc3(x)
 
@@ -227,7 +227,7 @@ class Pnasnet(nn.Module):
         
         self.swish = Swish()
         
-        self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
+        self.fc1 = spectral_norm(nn.Linear(1024, 168, bias=False))
         self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
@@ -239,15 +239,14 @@ class Pnasnet(nn.Module):
             'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
-        b = x.size(0)
         x = self.model.features(x)
         x = self.attn(x)
-        x = self.block2(x)
-        x = self.block3(x)
+        x1 = self.block2(x)
+        l0 = self.fc1(torch.sum(self.swish(x1), dim = (2,3)))
+        x = self.block3(x1)
         x = self.block4(x)
         x = self.swish(x)
         x = torch.sum(x, dim=(2,3))
-        l0 = self.fc1(x)
         l1 = self.fc2(x)
         l2 = self.fc3(x)
 
@@ -266,11 +265,11 @@ class Inresnet(nn.Module): # 改好打开
         self.attn = Attention(1536)
         self.block2 = DBlock(1536, 1024, downsample=True)
         self.block3 = DBlock(1024, 512, downsample=True)
-        self.block4 = DBlock(512, 256, downsample=True)
+        self.block4 = DBlock(512, 256, downsample=False)
         
         self.swish = Swish()
         
-        self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
+        self.fc1 = spectral_norm(nn.Linear(1024, 168, bias=False))
         self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
@@ -282,20 +281,18 @@ class Inresnet(nn.Module): # 改好打开
             'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
-        b = x.size(0)
         x = self.model.features(x)
         x = self.attn(x)
-        x = self.block2(x)
-        x = self.block3(x)
+        x1 = self.block2(x)
+        l0 = self.fc1(torch.sum(self.swish(x1), dim = (2,3)))
+        x = self.block3(x1)
         x = self.block4(x)
         x = self.swish(x)
         x = torch.sum(x, dim=(2,3))
-        
-        l0 = self.fc1(x)
         l1 = self.fc2(x)
         l2 = self.fc3(x)
 
-        return l0,l1,l2 
+        return l0,l1,l2
 
 class PolyNet(nn.Module):
     def __init__(self,pretrain = True):
@@ -309,11 +306,11 @@ class PolyNet(nn.Module):
         self.attn = Attention(2048)
         self.block2 = DBlock(2048, 1024, downsample=True)
         self.block3 = DBlock(1024, 512, downsample=True)
-        self.block4 = DBlock(512, 256, downsample=True)
+        self.block4 = DBlock(512, 256, downsample=False)
         
         self.swish = Swish()
         
-        self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
+        self.fc1 = spectral_norm(nn.Linear(1024, 168, bias=False))
         self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
@@ -325,19 +322,18 @@ class PolyNet(nn.Module):
             'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
-        b = x.size(0)
         x = self.model.features(x)
         x = self.attn(x)
-        x = self.block2(x)
-        x = self.block3(x)
+        x1 = self.block2(x)
+        l0 = self.fc1(torch.sum(self.swish(x1), dim = (2,3)))
+        x = self.block3(x1)
         x = self.block4(x)
         x = self.swish(x)
         x = torch.sum(x, dim=(2,3))
-        l0 = self.fc1(x)
         l1 = self.fc2(x)
         l2 = self.fc3(x)
 
-        return l0,l1,l2 
+        return l0,l1,l2
 
 
 class SeNet(nn.Module):
@@ -356,7 +352,7 @@ class SeNet(nn.Module):
         
         self.swish = Swish()
         
-        self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
+        self.fc1 = spectral_norm(nn.Linear(1024, 168, bias=False))
         self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
@@ -368,15 +364,14 @@ class SeNet(nn.Module):
             'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
-        b = x.size(0)
         x = self.model.features(x)
         x = self.attn(x)
-        x = self.block2(x)
-        x = self.block3(x)
+        x1 = self.block2(x)
+        l0 = self.fc1(torch.sum(self.swish(x1), dim = (2,3)))
+        x = self.block3(x1)
         x = self.block4(x)
         x = self.swish(x)
         x = torch.sum(x, dim=(2,3))
-        l0 = self.fc1(x)
         l1 = self.fc2(x)
         l2 = self.fc3(x)
 
