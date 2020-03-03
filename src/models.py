@@ -101,7 +101,7 @@ class ResNet101(nn.Module):
         
         self.swish = Swish()
         
-        self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
+        self.fc1 = spectral_norm(nn.Linear(1024, 168, bias=False))
         self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
@@ -113,15 +113,14 @@ class ResNet101(nn.Module):
             'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
-        b = x.size(0)
         x = self.model.features(x)
         x = self.attn(x)
-        x = self.block2(x)
-        x = self.block3(x)
+        x1 = self.block2(x)
+        l0 = self.fc1(torch.sum(self.swish(x1), dim = (2,3)))
+        x = self.block3(x1)
         x = self.block4(x)
         x = self.swish(x)
         x = torch.sum(x, dim=(2,3))
-        l0 = self.fc1(x)
         l1 = self.fc2(x)
         l2 = self.fc3(x)
 
