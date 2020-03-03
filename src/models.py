@@ -185,7 +185,7 @@ class SResnet(nn.Module):
         
         self.swish = Swish()
         
-        self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
+        self.fc1 = spectral_norm(nn.Linear(1024, 168, bias=False))
         self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
@@ -197,15 +197,14 @@ class SResnet(nn.Module):
             'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
-        b = x.size(0)
         x = self.model.features(x)
         x = self.attn(x)
-        x = self.block2(x)
-        x = self.block3(x)
+        x1 = self.block2(x)
+        l0 = self.fc1(torch.sum(self.swish(x1), dim = (2,3)))
+        x = self.block3(x1)
         x = self.block4(x)
         x = self.swish(x)
         x = torch.sum(x, dim=(2,3))
-        l0 = self.fc1(x)
         l1 = self.fc2(x)
         l2 = self.fc3(x)
 
@@ -387,7 +386,6 @@ class SeNet(nn.Module):
         
 class IcNetv4(nn.Module):
     def __init__(self,pretrain = True):
-        super(IcNetv4,self).__init__()
         if pretrain:
             self.model = pretrainedmodels.__dict__['inceptionv4'](pretrained = 'imagenet')
         else:
@@ -395,13 +393,13 @@ class IcNetv4(nn.Module):
             
         #  ### 1536 X 8 X 8
         self.attn = Attention(1536)
-        self.block2 = DBlock(1536, 1024, downsample=True)
+        self.block2 = DBlock(1536, 1024, downsample=False)
         self.block3 = DBlock(1024, 512, downsample=True)
-        self.block4 = DBlock(512, 256, downsample=True)
+        self.block4 = DBlock(512, 256, downsample=False)
         
         self.swish = Swish()
         
-        self.fc1 = spectral_norm(nn.Linear(256, 168, bias=False))
+        self.fc1 = spectral_norm(nn.Linear(512, 168, bias=False))
         self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
         self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
 
@@ -413,16 +411,14 @@ class IcNetv4(nn.Module):
             'acc_grapheme', 'acc_vowel', 'acc_consonant']
 
     def forward(self,x):
-        b = x.size(0)
         x = self.model.features(x)
         x = self.attn(x)
         x = self.block2(x)
-        x = self.block3(x)
-        x = self.block4(x)
+        x1 = self.block3(x)
+        l0 = self.fc1(torch.sum(self.swish(x1), dim = (2,3)))
+        x = self.block4(x1)
         x = self.swish(x)
         x = torch.sum(x, dim=(2,3))
-        print(x.size())
-        l0 = self.fc1(x)
         l1 = self.fc2(x)
         l2 = self.fc3(x)
 
