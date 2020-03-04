@@ -48,8 +48,8 @@ parameters={
         "momentum": 0.9,
         "weight_decay": 5e-4,
         "nesterov": True,
-        "lr_max_value": 0.05,
-        "lr_max_value_epoch": EPOCH // 13,
+        "lr_max_value": 0.03,
+        "lr_max_value_epoch": EPOCH // 15,
     }
 
 
