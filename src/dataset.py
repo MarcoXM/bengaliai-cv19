@@ -4,14 +4,13 @@ import pandas as pd
 import joblib
 import numpy as np 
 import torch
-from albumentations.augmentations import functional as F
+from albumentations.augmentations import functional as aF
 from PIL import Image
 
 
 def strong_aug(img_height,img_width,mean,std,p=.5):
     return A.Compose([
         A.Resize(img_height,img_width,always_apply= True),
-        A.Transpose(),
         A.OneOf([
             A.IAAAdditiveGaussianNoise(),
             A.GaussNoise(),
@@ -44,13 +43,13 @@ def strong_aug(img_height,img_width,mean,std,p=.5):
 
 class BengaliDatasetTrain:
     def __init__(self,folds, img_height, img_width, mean, std):
-        df = pd.read_csv("../input/train_fols.csv")
+        df = pd.read_csv("/kaggle/input/train-fols/train_fols.csv")
         df = df[["image_id","grapheme_root", "vowel_diacritic", "consonant_diacritic","kfold"]]
 
         df = df[df.kfold.isin(folds)].reset_index(drop=True)
         self.image_ids = df.image_id.values[:1000]
         self.labels = df[["grapheme_root", "vowel_diacritic", "consonant_diacritic"]].values
-        self.image_data = pd.concat([pd.read_parquet(f"../input/train_image_data_{i}.parquet") for i in range(4)])
+        self.image_data = pd.concat([pd.read_parquet(f"/kaggle/input/bengaliai-cv19/train_image_data_{i}.parquet") for i in range(4)])
         self.train_aug = strong_aug(img_height, img_width, mean, std)
 
         if len(folds) ==1 :
@@ -147,7 +146,7 @@ class GridMask(DualTransform):
 
     def apply(self, image, mask, rand_h, rand_w, angle, **params):
         h, w = image.shape[:2]
-        mask = F.rotate(mask, angle) if self.rotate[1] > 0 else mask
+        mask = aF.rotate(mask, angle) if self.rotate[1] > 0 else mask
         mask = mask[:,:,np.newaxis] if image.ndim == 3 else mask
         image *= mask[rand_h:rand_h+h, rand_w:rand_w+w].astype(image.dtype)
         return image
