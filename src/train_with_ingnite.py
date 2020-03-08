@@ -56,6 +56,7 @@ parameters={
 def main():
     print("Device is ",DEVICE)
     model = MODEL_DISPATCHER[BASE_MODEL](pretrain=True)
+    # model.load_state_dict(torch.load("../se_net/20200307-154303/weights/best_se_net_fold4_model_3_macro_recall=0.9435.pth"))
     model.to(DEVICE)
     print("Model loaded !!! ") 
 

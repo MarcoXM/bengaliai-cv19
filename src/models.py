@@ -380,6 +380,7 @@ class SeNet(nn.Module):
         
 class IcNetv4(nn.Module):
     def __init__(self,pretrain = True):
+        super(IcNetv4,self).__init__()
         if pretrain:
             self.model = pretrainedmodels.__dict__['inceptionv4'](pretrained = 'imagenet')
         else:
