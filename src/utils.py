@@ -21,7 +21,8 @@ def get_lr_scheduler(optimizer, lr_max_value, lr_max_value_epoch, num_epochs, ep
 
     milestones_values = [
         (0, 0.00002), 
-        (epoch_length * lr_max_value_epoch, lr_max_value * 2), 
+        (epoch_length * lr_max_value_epoch, lr_max_value * 2),
+        (epoch_length * lr_max_value_epoch  + 5, lr_max_value),
         (epoch_length * num_epochs - 1, 0.00002)
     ]
     lr_scheduler2 = PiecewiseLinear(optimizer, "lr", milestones_values=milestones_values,param_group_index=1)
