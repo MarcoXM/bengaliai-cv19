@@ -43,13 +43,13 @@ def strong_aug(img_height,img_width,mean,std,p=.5):
 
 class BengaliDatasetTrain:
     def __init__(self,folds, img_height, img_width, mean, std):
-        df = pd.read_csv("/kaggle/input/train-fols/train_fols.csv")
+        df = pd.read_csv("..input/train-fols/train_fols.csv")
         df = df[["image_id","grapheme_root", "vowel_diacritic", "consonant_diacritic","kfold"]]
 
         df = df[df.kfold.isin(folds)].reset_index(drop=True)
-        self.image_ids = df.image_id.values[:1000]
+        self.image_ids = df.image_id.values
         self.labels = df[["grapheme_root", "vowel_diacritic", "consonant_diacritic"]].values
-        self.image_data = pd.concat([pd.read_parquet(f"/kaggle/input/bengaliai-cv19/train_image_data_{i}.parquet") for i in range(4)])
+        self.image_data = pd.concat([pd.read_parquet(f"../input/train_image_data_{i}.parquet") for i in range(4)])
         self.train_aug = strong_aug(img_height, img_width, mean, std)
 
         if len(folds) ==1 :
