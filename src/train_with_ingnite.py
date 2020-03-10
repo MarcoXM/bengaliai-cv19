@@ -57,6 +57,11 @@ def main():
     print("Device is ",DEVICE)
     model = MODEL_DISPATCHER[BASE_MODEL](pretrain=True)
     # model.load_state_dict(torch.load("../se_net/20200307-154303/weights/best_se_net_fold4_model_3_macro_recall=0.9435.pth"))
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPUs!")
+        # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+        model = nn.DataParallel(model)
+
     model.to(DEVICE)
     print("Model loaded !!! ") 
 
