@@ -422,7 +422,7 @@ class IcNetv4(nn.Module):
         return l0,l1,l2
 
 class Effinet(nn.Module):
-    def __init__(self,ch,pretrain = True):
+    def __init__(self,pretrain = True):
         super(Effinet,self).__init__()
         if pretrain:
             self.model = EfficientNet.from_pretrained('efficientnet-b7')
