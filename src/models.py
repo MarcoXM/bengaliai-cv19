@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 from torch.nn.utils import spectral_norm
+from efficientnet_pytorch import EfficientNet
+model = EfficientNet.from_pretrained('efficientnet-b7') 
 
 class Swish(nn.Module):
     def forward(self, x):
@@ -417,4 +419,45 @@ class IcNetv4(nn.Module):
         l1 = self.fc2(x)
         l2 = self.fc3(x)
 
-        return l0,l1,l2 
+        return l0,l1,l2
+
+class Effinet(nn.Module):
+    def __init__(self,ch,pretrain = True):
+        super(Effinet,self).__init__()
+        if pretrain:
+            self.model = EfficientNet.from_pretrained('efficientnet-b7')
+        
+            
+        #  ### 2560 X 7 X 7
+        self.attn = Attention(2560)
+        self.block2 = DBlock(2560, 1024, downsample=False)
+        self.block3 = DBlock(1024, 512, downsample=False)
+        self.block4 = DBlock(512, 256, downsample=False)
+        
+        self.swish = Swish()
+        
+        self.fc1 = spectral_norm(nn.Linear(1024, 168, bias=False))
+        self.fc2 = spectral_norm(nn.Linear(256, 11, bias=False))
+        self.fc3 = spectral_norm(nn.Linear(256, 7, bias=False))
+
+        nn.init.orthogonal_(self.fc1.weight.data)
+        nn.init.orthogonal_(self.fc2.weight.data)
+        nn.init.orthogonal_(self.fc3.weight.data)
+        self.metrics_keys = [
+            'loss', 'loss_grapheme', 'loss_vowel', 'loss_consonant',
+            'acc_grapheme', 'acc_vowel', 'acc_consonant']
+
+    def forward(self,x):
+        x = self.model.extract_features(x)
+        x = self.attn(x)
+        x1 = self.block2(x)
+        l0 = self.fc1(torch.sum(self.swish(x1), dim = (2,3)))
+        print(x1.size())
+        x = self.block3(x1)
+        x = self.block4(x)
+        x = self.swish(x)
+        x = torch.sum(x, dim=(2,3))
+        l1 = self.fc2(x)
+        l2 = self.fc3(x)
+
+        return l0,l1,l2

@@ -10,6 +10,7 @@ MODEL_DISPATCHER = {
     'polynet':models.PolyNet, # 128 # weight 7,2,1
     'senet':models.SeNet, # 128 # weights 7,2,1
     'icnetvf':models.IcNetv4, # 128 weights 7,2,1
+    'effinet':models.Effinet
 }
 
 if __name__ =="__main__":
