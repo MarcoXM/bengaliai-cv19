@@ -10,6 +10,8 @@ import argparse
 from distutils.util import strtobool
 from datetime import datetime
 import os
+import random
+import numpy as np
 from ignite.contrib.handlers import ProgressBar
 from ignite.engine import Events
 from numpy.random.mtrand import RandomState
@@ -51,6 +53,16 @@ parameters={
         "lr_max_value": 0.015,
         "lr_max_value_epoch": EPOCH // 15,
     }
+
+def seed_everything(seed):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+
+seed_everything(42)
 
 
 def main():
